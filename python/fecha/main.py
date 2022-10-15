@@ -24,7 +24,8 @@ def validar(valid, date):
             day = int(date[0:2])    # Guardar dia, mes y año
             month = int(date[3:5])
             year = int(date[6:10])
-            if (day <= 0):      #comprobar que los dias, meses y años sean mayores que 0
+            valid = validBisiesto(day, month, year, valid) # comprobar si un año es bisiesto
+            if (day <= 0 or day > 31):      #comprobar que los dias, meses y años sean mayores que 0
                 valid = False
             if (month <= 0 or month > 12): # Comprobar que el mes no sea mayor a 12
                 valid = False
@@ -32,18 +33,13 @@ def validar(valid, date):
                 valid = False
 
             if ((month%2) == 0): # Validar cuando un mes tiene 30 o 31 dias
-                if (day > 30):
-                    if (month != 8):    # si es el mes de agosto también aplica como mes de 31 dias
+                if (month <= 7):
+                    if (day > 30):
                         valid = False   # asi que aquí se retira la condicion
             else:
-                if (day > 31):
-                    valid = False
-            if (month == 8):
-                if (day > 31):  # Si es agosto y pasa de 31 dias no es valido
-                    valid = False
-
-            valid = validBisiesto(day, month, year, valid) # comprobar si un año es bisiesto
-
+                if (month > 7):
+                    if (day > 30):
+                        valid = False   # asi que aquí se retira la condicion
     return valid
 
 def validBisiesto(day, month, year, valid):
@@ -52,12 +48,12 @@ def validBisiesto(day, month, year, valid):
         if (not((year%100) == 0)):  # es divisible entre 4 pero no entre 100
             print("Año bisiesto\n")
             bisiesto = True
-    if (bisiesto == False):
-        if (month == 2):
+
+    if (month == 2):
+        if (bisiesto == False):
             if (day > 28): # febrero en año normal son 28 dias
                 valid = False
-    else:
-        if (month == 2): # febrero en bisiesto son 29 dias
+        else:
             if (day > 29):
                 valid = False
     return valid
