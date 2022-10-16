@@ -23,16 +23,18 @@ def main():
 def menu():
     contadorID = 0          # variable para determinar el ID automatico de los empleados
     empleados =  []         # lista para almacenar los empleados
-    valid = False
-    edad = 0
-    noPop = True
+    valid = False           # funcion para validar eventos
+    edad = 0                # funcion para guardar la edad temporal
+    noPop = True            # funcion para saber cuando se pueden mostrar ventanas emergentes
 
+    # Se generan los menus
     menuPrincipal = defineMenuPrinc()
     menuRegistro = defineMenuReg()
     menuEdadPorID = defineMenuEdadPorID()
     menuOrdPorAP = defineMenuOrdApe()
     menuOrdPorEdad = defineMenuOrdEdad()
     
+    # se preparan todos los menus por orden y visibilidad
     layout = [[
         sg.Column(menuPrincipal, key='-COL1-', element_justification='c', background_color="#1A1A1A"),
         sg.Column(menuRegistro, visible=False, key='-COL2-', background_color="#1A1A1A"),
@@ -40,12 +42,17 @@ def menu():
         sg.Column(menuOrdPorAP, visible=False, key='-COL4-', element_justification='c', background_color="#1A1A1A"),
         sg.Column(menuOrdPorEdad, visible=False, key='-COL5-', element_justification='c', background_color="#1A1A1A")
         ]]
+    # se crea la ventana
     window = sg.Window("Menu de empleados", layout, size=(500, 500), margins=(16, 50), element_justification='c', background_color="#1A1A1A")
+    # se asigna el primer menu (el menu principal) para poder ser iterable
     layout = 1
     
+    # mientras no se accione el evento de salida se mantiene el loop del menu
     while True:
+        # se leen los eventos y valores de la ventana
         event, values = window.read()
 
+        # en caso de presionar un boton de "regresar" se muestra el menu inicial
         if event == "R1" or event == "R2" or event == "R3" or event == "R4":
             window[f'-COL{layout}-'].update(visible=False)
             layout = 1
@@ -53,10 +60,12 @@ def menu():
             cleanReg(window)
             noPop = False
 
+        # Evento de salida para cerrar la aplicación
         if event == "Salir" or event == sg.WIN_CLOSED:
             noPop = False
             break
 
+        # se registra un empleado nuevo
         if event == "Registrar":
             noPop = False
             valid = registrarEmpleado(contadorID, values.get("Name"), values.get("AP"), values.get("AM"), values.get("FN"), valid)
@@ -64,21 +73,26 @@ def menu():
                 day = int(values.get("FN")[0:2])   # se disecciona la fecha de nacimiento en dia, mes y año
                 month = int(values.get("FN")[3:5])
                 year = int(values.get("FN")[6:10])
+                # se anexa el empleado nuevo
                 empleados.append(Empleado(contadorID, procNom(values.get("Name")), procNom(values.get("AP")), procNom(values.get("AM")), date(year, month, day))) 
+                # se notifica que se ha generado un usuario
                 sg.Popup("Se ha registrado el empleado con el ID ["+str(contadorID)+"]", keep_on_top=True, background_color="#1A1A1A")
+                # se retorna al menu inicial y se limpian los registros temporales
                 cleanReg(window)
                 window[f'-COL{layout}-'].update(visible=False)
                 layout = 1
                 window[f'-COL{layout}-'].update(visible=True)
                 valid = False
+                # se incrementa el contador de ID "Global"
                 contadorID += 1
 
+        # se calcula la edad del empleado seleccionado por ID
         if event == "Buscar":
             edad = obtenerEdadPorID(empleados, contadorID, values.get("BPID"))
             if (edad != 0):
                 window["contEdad"].update(empleados[int(values.get("BPID"))].Nombre+" tiene "+str(edad)+" años.")
 
-
+        # se refrezca la ventana solo si hay un evento de cambio de menu
         if (layout == 1):
             window[f'-COL{layout}-'].update(visible=False)
             layout = seleccionarMenu(window, contadorID, noPop, event, empleados)
@@ -87,30 +101,38 @@ def menu():
 
     window.close()
 
+# funcion para seleccionar el tipo de menu y proceso a realizar
 def seleccionarMenu(window, contadorID, noPop, event, empleados):
     layout = 1
+    # se va al menu de registro de empleados
     if event == "opt1":
         noPop = False
         layout = 2
 
+    # mientras el contador de ID "global" no sea mayor a 0 no se permite usar funciones debido a que no hay registros
     if contadorID > 0:
+        # se va al menu de mostrar edad del empleado por ID
         if event == "opt2":
             layout = 3
 
+        # se muestran los empleados ordenados por apellido en orden alfabetico
         if event == "opt3":
             layout = 4
             for x in ordenAlfabetico(empleados):     # se obtiene cada empleado dentro de la lista auxiliar
                 window["ordAlf"].update(window["ordAlf"].get()+"[ID:"+str(x.ID)+"] ["+x.Nombre+" "+x.ApeP+" "+x.ApeM+"] ["+str(x.FechNac.strftime("%d/%m/%Y"))+"] [Edad: "+str(calcEdadProc(x.FechNac))+"]\n") 
 
+        # se muestran los empleados ordenados por edad
         if event == "opt4":
             layout = 5
             for x in ordenEdad(empleados):     # se obtiene cada empleado dentro de la lista auxiliar
                 window["ordEdad"].update(window["ordEdad"].get()+"[ID:"+str(x.ID)+"] ["+x.Nombre+" "+x.ApeP+" "+x.ApeM+"] ["+str(x.FechNac.strftime("%d/%m/%Y"))+"] [Edad: "+str(calcEdadProc(x.FechNac))+"]\n") 
     else:
+        # en caso de que no haya registros se muestra una ventana emergente avisando la situación
         if (noPop == True):
             sg.Popup("Aun no se han creado registros", keep_on_top=True, background_color="#1A1A1A")
     return layout
 
+# funcion donde se limpian los registros temporales para que los contenedores interactivos esten vacios
 def cleanReg(window):
     window["Name"].update("")
     window["AP"].update("")
@@ -121,6 +143,7 @@ def cleanReg(window):
     window["ordAlf"].update("")
     window["ordEdad"].update("")
 
+# funcion para definir la estructura del menu inicial
 def defineMenuPrinc():
     menuPrincipal = [
             [sg.Button(button_text="Registrar empleado.", key="opt1")],
@@ -131,6 +154,7 @@ def defineMenuPrinc():
         ]
     return menuPrincipal
 
+# funcion para definir la estructura del menu de registro de empleados
 def defineMenuReg():
     menuRegistro = [
             [sg.Text("Nombre\t\t\t", background_color="#1A1A1A"), sg.In(size=(25, 1), enable_events=True, key="Name")],
@@ -142,6 +166,7 @@ def defineMenuReg():
         ]
     return menuRegistro
 
+# funcion para definir la estructura del menu de mostrar edad por ID
 def defineMenuEdadPorID():
     menuEdadPorID = [
             [sg.Text("Introduzca un ID"), sg.In(size=(25, 1), enable_events=True, key="BPID")],
@@ -151,6 +176,7 @@ def defineMenuEdadPorID():
         ]
     return menuEdadPorID
 
+# funcion para definir la estructura la lista de empleados ordenada por apellido
 def defineMenuOrdApe():
     menuOrdPorAP = [
             [sg.Text("", background_color="#4a4a4a", key="ordAlf")],
@@ -158,6 +184,7 @@ def defineMenuOrdApe():
         ]
     return menuOrdPorAP
 
+# funcion para definir la estructura la lista de empleados ordenada por edad
 def defineMenuOrdEdad():
     menuOrdPorEdad = [
             [sg.Text("", background_color="#4a4a4a", key="ordEdad")],
@@ -240,6 +267,7 @@ def calcEdad(fecha):
     edad = presente.year - FechNac.year - ((presente.month, presente.day) < (FechNac.month, FechNac.day)) # se calcula la edad
     return edad # se retorna la edad
 
+# Funcion para calcular la edad una vez se ha procesado en formato
 def calcEdadProc(fecha):
     presente = date.today() # se pide la fecha actual
 

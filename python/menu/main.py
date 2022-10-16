@@ -159,9 +159,10 @@ def calcEdad(fecha):
 
     edad = presente.year - FechNac.year - ((presente.month, presente.day) < (FechNac.month, FechNac.day)) # se calcula la edad
     return edad # se retorna la edad
+
+# Funcion para calcular la edad una vez se ha procesado en formato
 def calcEdadProc(fecha):
     presente = date.today() # se pide la fecha actual
-
     edad = presente.year - fecha.year - ((presente.month, presente.day) < (fecha.month, fecha.day)) # se calcula la edad
     return edad # se retorna la edad
 
