@@ -3,7 +3,7 @@ import operator
 from datetime import date
 import validarFecha
 
-# interfaz
+# interfaz, es necesario instalar el modulo de PySimpleGUI
 import PySimpleGUI as sg
 
 #se define la clase
